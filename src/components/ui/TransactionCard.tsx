@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native'
 import React from 'react'
+import { formatCurrency } from '../helpers/money-formatter';
 
 interface Props {
     type: string;
@@ -16,7 +17,7 @@ export const TransactionCard = ({ type, name, amount }: Props) => {
             <View style={styles.content}>
                 <Text style={styles.name}>{name}</Text>
                 <Text style={[styles.amount, { color: borderColor }]}>
-                    {type == "entrada" ? `+ R$ ${amount}` : `- R$ ${amount}`}
+                    {type == "entrada" ? `+${formatCurrency(amount)}` : `- ${formatCurrency(amount)}`}
                 </Text>
             </View>
         </View>

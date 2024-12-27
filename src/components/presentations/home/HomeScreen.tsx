@@ -7,6 +7,7 @@ import { FloatingButton } from '../../ui/FloatingButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Transaction } from '../../../data/transaction';
 import { useNavigation } from '@react-navigation/native';
+import { formatCurrency } from '../../helpers/money-formatter';
 
 export const HomeScreen = () => {
 
@@ -18,6 +19,7 @@ export const HomeScreen = () => {
     const [loading, setLoading] = useState(true);
 
     const processTransactions = (transactions: Transaction[]) => {
+
         const entrada = transactions
             .filter((item) => item.type === "entrada")
             .map((item) => item.amount);
@@ -75,6 +77,16 @@ export const HomeScreen = () => {
         })
     }, [navigation]);
 
+    const totalEntradas = transactions
+        .filter((item) => item.type === "entrada")
+        .reduce((acc, item) => acc + item.amount, 0);
+
+    const totalSaidas = transactions
+        .filter((item) => item.type === "saida")
+        .reduce((acc, item) => acc + item.amount, 0);
+
+    const saldo = totalEntradas - totalSaidas;
+
     if (loading) {
         return (
             <View style={style.container}>
@@ -95,22 +107,21 @@ export const HomeScreen = () => {
                 <View style={style.summary}>
                     <Text style={{ fontWeight: '700', fontSize: 16 }}>Entrada:  </Text>
                     <Text style={style.summaryEntry}>
-                        R$ {transactions.filter((item) => item.type === "entrada").reduce((acc, item) => acc + item.amount, 0)}, 00
+                        {formatCurrency(totalEntradas)}
                     </Text>
                 </View>
 
                 <View style={style.summary}>
                     <Text style={{ fontWeight: '700', fontSize: 16 }}>Saída:  </Text>
                     <Text style={style.summaryEntry}>
-                        R$ {transactions.filter((item) => item.type === "saida").reduce((acc, item) => acc + item.amount, 0)}, 00
+                        {formatCurrency(totalSaidas)}
                     </Text>
                 </View>
 
                 <View style={style.summary}>
                     <Text style={{ fontWeight: '700', fontSize: 16 }}>Saldo:  </Text>
                     <Text style={style.summaryEntry}>
-                        R$ {transactions.filter((item) => item.type === "entrada").reduce((acc, item) => acc + item.amount, 0) -
-                            transactions.filter((item) => item.type === "saida").reduce((acc, item) => acc + item.amount, 0)}, 00
+                        {formatCurrency(saldo)}
                     </Text>
                 </View>
             </View>
@@ -163,7 +174,7 @@ export const HomeScreen = () => {
             </View>
 
             <FloatingButton
-                onPress={() => { navigation.navigate('TransactionScreen')}}
+                onPress={() => { navigation.navigate('TransactionScreen') }}
                 buttonStyle={style.floatingbutton}
             />
         </View>
