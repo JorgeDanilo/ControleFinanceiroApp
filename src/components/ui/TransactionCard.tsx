@@ -6,11 +6,13 @@ interface Props {
     type: string;
     name: string;
     amount: number;
+    createdAt: string;
 }
 
-export const TransactionCard = ({ type, name, amount }: Props) => {
+export const TransactionCard = ({ type, name, amount, createdAt }: Props) => {
 
     const borderColor = type == "entrada" ? "#22CA66" : "#FF6347";
+    const formattedDate = new Date(createdAt).toLocaleDateString('pt-BR');
 
     return (
         <View style={[styles.card, { borderLeftColor: borderColor }]}>
@@ -20,14 +22,16 @@ export const TransactionCard = ({ type, name, amount }: Props) => {
                     {type == "entrada" ? `+${formatCurrency(amount)}` : `- ${formatCurrency(amount)}`}
                 </Text>
             </View>
+    
+            <Text style={styles.date}>{formattedDate}</Text>
         </View>
     )
 }
 
 const styles = StyleSheet.create({
     card: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: 'column',
+        alignItems: 'stretch',
         backgroundColor: '#fff',
         borderRadius: 8,
         marginVertical: 8,
@@ -51,6 +55,12 @@ const styles = StyleSheet.create({
     },
     amount: {
         fontSize: 16,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        top: 0,
     },
+    date: {
+        fontSize: 12,
+        color: '#888',
+        marginTop: 4,
+    }
 });

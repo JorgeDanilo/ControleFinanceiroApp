@@ -22,28 +22,29 @@ export const HomeScreen = () => {
 
         const entrada = transactions
             .filter((item) => item.type === "entrada")
-            .map((item) => item.amount);
+            .map((item) => item.amount) ?? [];
 
         const saida = transactions
             .filter((item) => item.type === "saida")
-            .map((item) => item.amount);
+            .map((item) => item.amount) ?? [];
 
-        const labels = transactions.map((item) => {
-            const date = new Date(item.date); // Assumindo que a transação tem uma propriedade 'date'
-            const month = date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(); // Obtém o nome do mês abreviado
-            return month;
-        });
+        const labels = transactions.length > 0
+            ? transactions.map((item) => {
+                const date = new Date(item.date);
+                const month = date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase();
+                return month;
+            }) : ['Sem transações'];
 
         const datasets = [
             {
-                data: entrada,
-                color: () => `rgba(34, 202, 102, 1)`, // cor verde
+                data: entrada.length > 0 ? entrada : [0],
+                color: () => `rgba(34, 202, 102, 1)`,
                 strokeWidth: 2
             },
             {
-                data: saida,
-                color: () => `rgba(255, 99, 71, 1)`, // cor vermelha
-                strokeWidth: 2, // largura da linha
+                data: saida.length > 0 ? saida : [0],
+                color: () => `rgba(255, 99, 71, 1)`,
+                strokeWidth: 2,
             }
         ];
 
@@ -63,6 +64,7 @@ export const HomeScreen = () => {
             setTransactions(transactions);
 
             const data = processTransactions(transactions);
+            console.log({ data });
             setChartData(data);
         } catch (error) {
             console.error('Erro ao carregar transações: ', error);
@@ -79,11 +81,11 @@ export const HomeScreen = () => {
 
     const totalEntradas = transactions
         .filter((item) => item.type === "entrada")
-        .reduce((acc, item) => acc + item.amount, 0);
+        .reduce((acc, item) => acc + (item.amount || 0), 0);
 
     const totalSaidas = transactions
         .filter((item) => item.type === "saida")
-        .reduce((acc, item) => acc + item.amount, 0);
+        .reduce((acc, item) => acc + (item.amount), 0);
 
     const saldo = totalEntradas - totalSaidas;
 
@@ -94,6 +96,10 @@ export const HomeScreen = () => {
             </View>
         );
     }
+
+    console.log(saldo);
+    console.log(totalEntradas);
+    // console.log(chartData);
 
     return (
         <View style={style.container}>
@@ -107,21 +113,21 @@ export const HomeScreen = () => {
                 <View style={style.summary}>
                     <Text style={{ fontWeight: '700', fontSize: 16 }}>Entrada:  </Text>
                     <Text style={style.summaryEntry}>
-                        {formatCurrency(totalEntradas)}
+                        {totalEntradas ? formatCurrency(totalEntradas) : 'Sem transações'}
                     </Text>
                 </View>
 
                 <View style={style.summary}>
                     <Text style={{ fontWeight: '700', fontSize: 16 }}>Saída:  </Text>
                     <Text style={style.summaryEntry}>
-                        {formatCurrency(totalSaidas)}
+                        {totalSaidas ? formatCurrency(totalSaidas) : 'Sem transações'}
                     </Text>
                 </View>
 
                 <View style={style.summary}>
                     <Text style={{ fontWeight: '700', fontSize: 16 }}>Saldo:  </Text>
                     <Text style={style.summaryEntry}>
-                        {formatCurrency(saldo)}
+                        {saldo ? formatCurrency(saldo) : 'Sem transações'}
                     </Text>
                 </View>
             </View>
@@ -160,17 +166,23 @@ export const HomeScreen = () => {
             <View style={[style.transactioncard]} >
                 <Text style={style.summaryTitle}>Transações</Text>
 
-                <FlatList
-                    data={transactions}
-                    keyExtractor={(item) => item.date}
-                    renderItem={({ item }) => (
-                        <TransactionCard
-                            type={item.type}
-                            name={item.name}
-                            amount={item.amount}
+                {
+                    transactions.length > 0 ? (
+                        <FlatList
+                            data={transactions}
+                            keyExtractor={(item) => item.date}
+                            renderItem={({ item }) => (
+                                <TransactionCard
+                                    createdAt={item.date}
+                                    type={item.type}
+                                    name={item.name}
+                                    amount={item.amount}
+                                />
+                            )}
                         />
-                    )}
-                />
+                    ) : (<View style={{ justifyContent: 'center', alignContent: 'center', alignItems: 'center' }}><Text>Sem transações</Text></View>)
+                }
+
             </View>
 
             <FloatingButton
