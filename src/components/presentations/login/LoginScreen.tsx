@@ -1,16 +1,15 @@
 import { View, Text, TextInput, TouchableOpacity } from 'react-native'
-import React from 'react'
 
-export default function LoginScreen() {
+export const LoginScreen = () => {
   return (
-    <View>
+    <View style={{flex: 1}}>
       <Text>Email</Text>
       <TextInput />
 
       <Text>Email</Text>
       <TextInput />
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => {}}>
         <Text>Login</Text>
       </TouchableOpacity>
     </View>
