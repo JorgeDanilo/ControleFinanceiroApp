@@ -16,6 +16,18 @@ export const TransactionScreen: React.FC = () => {
     const [date, setDate] = useState(new Date());
     const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
 
+    const handleAmountChange = (value: string) => {
+        const formattedText = value.replace(',', '.');
+
+        const validText = formattedText.replace(/[^0-9.]/g, '');
+
+        const sanitizeText = validText.split('.').reduce((acc, part, index) => {
+            return index === 0 ? part : `${acc}.${part}`;
+        });
+
+        setAmount(sanitizeText);
+
+    }
     const handleSave = async () => {
         if (!name || !amount) {
             Alert.alert('Erro', 'Por favor, preencha todos os campos.');
@@ -81,9 +93,9 @@ export const TransactionScreen: React.FC = () => {
             <TextInput
                 style={styles.input}
                 placeholder='Digite o valor'
-                keyboardType='numeric'
+                keyboardType='decimal-pad'
                 value={amount}
-                onChangeText={setAmount}
+                onChangeText={handleAmountChange}
             />
 
             <Text style={styles.label}>Data</Text>

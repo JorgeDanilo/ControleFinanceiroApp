@@ -20,20 +20,26 @@ export const HomeScreen = () => {
 
     const processTransactions = (transactions: Transaction[]) => {
 
-        const entrada = transactions
-            .filter((item) => item.type === "entrada")
-            .map((item) => item.amount) ?? [];
+        const monthlyData: Record<string, { entrada: number; saida: number }> = {};
 
-        const saida = transactions
-            .filter((item) => item.type === "saida")
-            .map((item) => item.amount) ?? [];
+        for (const item of transactions) {
+            const date = new Date(item.date);
+            const month = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }).toUpperCase();
 
-        const labels = transactions.length > 0
-            ? transactions.map((item) => {
-                const date = new Date(item.date);
-                const month = date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase();
-                return month;
-            }) : ['Sem transações'];
+            if (!monthlyData[month]) {
+                monthlyData[month] = { entrada: 0, saida: 0 };
+            }
+
+            if (item.type === 'entrada') {
+                monthlyData[month].entrada += item.amount;
+            } else {
+                monthlyData[month].saida += item.amount;
+            }
+        }
+
+        const labels = Object.keys(monthlyData);
+        const entrada = labels.map((month) => monthlyData[month].entrada);
+        const saida = labels.map((month) => monthlyData[month].saida);
 
         const datasets = [
             {
@@ -170,7 +176,7 @@ export const HomeScreen = () => {
                     transactions.length > 0 ? (
                         <FlatList
                             data={transactions}
-                            keyExtractor={(item) => item.date}
+                            keyExtractor={(item, index) => `${item.date}-${index}`}
                             renderItem={({ item }) => (
                                 <TransactionCard
                                     createdAt={item.date}
@@ -201,7 +207,7 @@ const style = StyleSheet.create({
 
     navbar: {
         backgroundColor: '#0047AB',
-        height: 100,
+        height: 70,
         justifyContent: 'center',
         alignContent: "center",
         borderBottomLeftRadius: 20,
