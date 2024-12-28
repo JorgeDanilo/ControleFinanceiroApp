@@ -35,6 +35,7 @@ export const TransactionScreen: React.FC = () => {
         }
 
         const newTransaction: Transaction = {
+            id: generateUUID(),
             name,
             type,
             amount: parseFloat(amount),
@@ -64,6 +65,15 @@ export const TransactionScreen: React.FC = () => {
         }
 
     }
+
+    function generateUUID(): string {
+        // Gerar um número hexadecimal aleatório de 8 caracteres
+        const randomHex = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+      
+        // Construir o UUID no formato correto
+        return `${randomHex()}-${randomHex()}-4${randomHex().substring(1)}-${(Math.floor(Math.random() * 4) + 8).toString(16)}${randomHex().substring(1)}-${randomHex()}${randomHex()}${randomHex()}`;
+      }
+      
 
     return (
         <View style={styles.container}>

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { LineChart } from 'react-native-chart-kit';
 import { FlatList } from 'react-native-gesture-handler';
@@ -8,11 +8,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Transaction } from '../../../data/transaction';
 import { useNavigation } from '@react-navigation/native';
 import { formatCurrency } from '../../helpers/money-formatter';
+import { ButtonDownload } from '../../ui/ButtonDownload';
 
 export const HomeScreen = () => {
 
     const navigation = useNavigation();
-    const screenWidth = Dimensions.get("window").width;
 
     const [chartData, setChartData] = useState<any | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -70,7 +70,6 @@ export const HomeScreen = () => {
             setTransactions(transactions);
 
             const data = processTransactions(transactions);
-            console.log({ data });
             setChartData(data);
         } catch (error) {
             console.error('Erro ao carregar transações: ', error);
@@ -95,6 +94,22 @@ export const HomeScreen = () => {
 
     const saldo = totalEntradas - totalSaidas;
 
+    const handleDelete = async (transactionId: string) => {
+        try {
+            const storedTransactions = await AsyncStorage.getItem('@transactions');
+            const transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+
+            const updatedTransactions = transactions.filter((transaction: { id: string }) => transaction.id !== transactionId);
+
+            await AsyncStorage.setItem("@transactions", JSON.stringify(updatedTransactions));
+        } catch (error) {
+            console.error('Erro ao excluir transação: ', error);
+        } finally {
+            fetchDataFromStorage();
+        }
+
+    }
+
     if (loading) {
         return (
             <View style={style.container}>
@@ -103,47 +118,38 @@ export const HomeScreen = () => {
         );
     }
 
-    console.log(saldo);
-    console.log(totalEntradas);
-    // console.log(chartData);
-
-    return (
-        <View style={style.container}>
+    const renderHeader = () => (
+        <>
             <View style={style.navbar}>
-                <Text style={style.title}>Suas  Finanças</Text>
+                <Text style={style.title}>Suas Finanças</Text>
             </View>
 
             <View style={style.card}>
-                <Text style={style.summaryTitle}>Resumo</Text>
+                <View style={style.summarycard}>
+                    <Text style={style.summaryTitle}>Resumo</Text>
 
-                <View style={style.summary}>
-                    <Text style={{ fontWeight: '700', fontSize: 16 }}>Entrada:  </Text>
-                    <Text style={style.summaryEntry}>
-                        {totalEntradas ? formatCurrency(totalEntradas) : 'Sem transações'}
-                    </Text>
+                    <ButtonDownload transactions={transactions} />
                 </View>
-
                 <View style={style.summary}>
-                    <Text style={{ fontWeight: '700', fontSize: 16 }}>Saída:  </Text>
-                    <Text style={style.summaryEntry}>
-                        {totalSaidas ? formatCurrency(totalSaidas) : 'Sem transações'}
-                    </Text>
+                    <Text style={{ fontWeight: '700', fontSize: 16 }}>Entrada: </Text>
+                    <Text style={style.summaryEntry}>{formatCurrency(totalEntradas)}</Text>
                 </View>
-
                 <View style={style.summary}>
-                    <Text style={{ fontWeight: '700', fontSize: 16 }}>Saldo:  </Text>
-                    <Text style={style.summaryEntry}>
-                        {saldo ? formatCurrency(saldo) : 'Sem transações'}
-                    </Text>
+                    <Text style={{ fontWeight: '700', fontSize: 16 }}>Saída: </Text>
+                    <Text style={style.summaryEntry}>{formatCurrency(totalSaidas)}</Text>
+                </View>
+                <View style={style.summary}>
+                    <Text style={{ fontWeight: '700', fontSize: 16 }}>Saldo: </Text>
+                    <Text style={style.summaryEntry}>{formatCurrency(saldo)}</Text>
                 </View>
             </View>
 
+
             <View style={style.chartcard}>
                 <Text style={style.summaryTitle}>Gráfico de Entradas e Saídas</Text>
-
                 <LineChart
                     data={chartData}
-                    width={screenWidth - 20}
+                    width={Dimensions.get("window").width - 20}
                     height={200}
                     chartConfig={{
                         backgroundColor: "#f5f5f5",
@@ -152,51 +158,43 @@ export const HomeScreen = () => {
                         decimalPlaces: 2,
                         color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                         labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                        style: {
-                            borderRadius: 16,
-                        },
-                        propsForDots: {
-                            r: "6", // tamanho dos pontos,
-                            strokeWidth: 2,
-                        },
                     }}
-                    bezier // deixa o grafico com linhas suavidadas
-                    style={{
-                        justifyContent: 'center',
-                        marginVertical: 8,
-                        borderRadius: 16,
-                    }}
+                    bezier
+                    style={{ marginVertical: 8, borderRadius: 16 }}
                 />
             </View>
+        </>
+    );
 
-            <View style={[style.transactioncard]} >
-                <Text style={style.summaryTitle}>Transações</Text>
-
-                {
-                    transactions.length > 0 ? (
-                        <FlatList
-                            data={transactions}
-                            keyExtractor={(item, index) => `${item.date}-${index}`}
-                            renderItem={({ item }) => (
-                                <TransactionCard
-                                    createdAt={item.date}
-                                    type={item.type}
-                                    name={item.name}
-                                    amount={item.amount}
-                                />
-                            )}
-                        />
-                    ) : (<View style={{ justifyContent: 'center', alignContent: 'center', alignItems: 'center' }}><Text>Sem transações</Text></View>)
+    return (
+        <View>
+            <FlatList
+                data={transactions}
+                keyExtractor={(item, index) => `${item.id}-${index}`}
+                renderItem={({ item }) => (
+                    <TransactionCard
+                        onDelete={() => handleDelete(item.id)}
+                        createdAt={item.date}
+                        type={item.type}
+                        name={item.name}
+                        amount={item.amount}
+                    />
+                )}
+                ListHeaderComponent={renderHeader}
+                ListEmptyComponent={
+                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                        <Text>Sem transações</Text>
+                    </View>
                 }
-
-            </View>
-
+                contentContainerStyle={{ paddingBottom: 20 }} // Para evitar sobreposição do botão flutuante
+            />
             <FloatingButton
                 onPress={() => { navigation.navigate('TransactionScreen') }}
                 buttonStyle={style.floatingbutton}
             />
         </View>
-    )
+
+    );
 }
 
 const style = StyleSheet.create({
@@ -252,6 +250,11 @@ const style = StyleSheet.create({
         marginVertical: 2,
         marginHorizontal: 20,
         flexDirection: 'row',
+    },
+
+    summarycard: {
+        flexDirection: 'row',
+        alignContent: 'space-around'
     },
 
     summaryTitle: {
