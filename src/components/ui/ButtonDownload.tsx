@@ -1,12 +1,11 @@
-import { Alert, PermissionsAndroid, Platform, TouchableOpacity } from 'react-native'
-import React, { useEffect } from 'react'
+import { Alert, StyleSheet, TouchableOpacity } from 'react-native'
+import React from 'react'
 import { Transaction } from '../../data/transaction'
 import { formatCurrency } from '../helpers/money-formatter';
 import Icon from '@react-native-vector-icons/material-icons';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import RNFS from 'react-native-fs'; // Para acessar
-//  o caminho do arquivo gerado
 import FileViewer from 'react-native-file-viewer';
+import { requestPermissions } from '../helpers/permissions';
 
 interface ButtonDownloadProps {
     transactions: Transaction[];
@@ -14,64 +13,37 @@ interface ButtonDownloadProps {
 
 export const ButtonDownload = ({ transactions }: ButtonDownloadProps) => {
 
-    useEffect(() => {
-        requestPermissions()
-    })
-
-    const requestPermissions = async () => {
-        if (Platform.OS === 'android') {
-            try {
-                const granted = await PermissionsAndroid.requestMultiple([
-                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                ]);
-
-                // Verifica se as permissões foram concedidas
-                if (
-                    granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED &&
-                    granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-                ) {
-                    console.log('Permissões de armazenamento concedidas');
-                } else {
-                    console.log('Permissões de armazenamento negadas');
-                    Alert.alert('Permissão necessária', 'Por favor, permita o acesso ao armazenamento.');
-                }
-            } catch (err) {
-                console.warn(err);
-            }
-        }
-    };
-
-
     const generatePDF = async () => {
         try {
+            requestPermissions();
+
             const htmlContent = `
-        <h1>Transações</h1>
-        <table border="1" style="width:100%; border-collapse: collapse;">
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Tipo</th>
-              <th>Valor</th>
-              <th>Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${transactions
-                    .map(
-                        (t) => `
-                  <tr>
-                    <td>${t.name}</td>
-                    <td>${t.type}</td>
-                    <td>${t.amount}</td>
-                    <td>${t.date}</td>
-                  </tr>
-                `
-                    )
+                <h1>Minhas Transações</h1>
+                <table border="1" style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                    </tr>
+                </thead>
+                    <tbody>
+                    ${transactions
+                    .map((t) => {
+                        const formattedDate = new Date(t.date).toLocaleDateString('pt-BR');
+                        return `
+                                <tr>
+                                <td>${t.name}</td>
+                                <td>${t.type === 'entrada' ? 'Entrada' : 'Saída'}</td>
+                                <td>${formatCurrency(t.amount)}</td>
+                                <td>${formattedDate}</td>
+                                </tr>`;
+                    })
                     .join('')}
-          </tbody>
-        </table>
-      `;
+                    </tbody>
+                </table>
+        `;
 
             const pdfOptions = {
                 html: htmlContent,
@@ -97,7 +69,14 @@ export const ButtonDownload = ({ transactions }: ButtonDownloadProps) => {
     }
     return (
         <TouchableOpacity onPress={generatePDF}>
-            <Icon name='download' size={24} style={{ padding: 20 }} />
+            <Icon name='download' size={24} style={styles.button} color="#0047AB" />
         </TouchableOpacity>
     )
 }
+
+const styles = StyleSheet.create({
+    button: {
+        alignSelf: 'flex-end',
+        paddingTop: 16,
+    }
+});

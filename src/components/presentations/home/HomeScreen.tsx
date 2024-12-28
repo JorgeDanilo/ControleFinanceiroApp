@@ -9,6 +9,7 @@ import { Transaction } from '../../../data/transaction';
 import { useNavigation } from '@react-navigation/native';
 import { formatCurrency } from '../../helpers/money-formatter';
 import { ButtonDownload } from '../../ui/ButtonDownload';
+import { NavBarComponent } from '../../ui/NavBarComponent';
 
 export const HomeScreen = () => {
 
@@ -120,14 +121,11 @@ export const HomeScreen = () => {
 
     const renderHeader = () => (
         <>
-            <View style={style.navbar}>
-                <Text style={style.title}>Suas Finanças</Text>
-            </View>
+            <NavBarComponent title='Suas Finanças' />
 
             <View style={style.card}>
                 <View style={style.summarycard}>
                     <Text style={style.summaryTitle}>Resumo</Text>
-
                     <ButtonDownload transactions={transactions} />
                 </View>
                 <View style={style.summary}>
@@ -203,26 +201,7 @@ const style = StyleSheet.create({
         backgroundColor: "#F8F9FA",
     },
 
-    navbar: {
-        backgroundColor: '#0047AB',
-        height: 70,
-        justifyContent: 'center',
-        alignContent: "center",
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 6
-    },
 
-    title: {
-        textAlign: "center",
-        color: "white",
-        fontSize: 28,
-        fontWeight: "700"
-    },
 
     card: {
         marginTop: 16,
@@ -254,7 +233,9 @@ const style = StyleSheet.create({
 
     summarycard: {
         flexDirection: 'row',
-        alignContent: 'space-around'
+        alignContent: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
     },
 
     summaryTitle: {
